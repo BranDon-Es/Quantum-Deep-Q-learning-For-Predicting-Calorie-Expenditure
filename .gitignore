@@ -1,0 +1,3 @@
+*.pkl
+./venv/
+./catboost_info/

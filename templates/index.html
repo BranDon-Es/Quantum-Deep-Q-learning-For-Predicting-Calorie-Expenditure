@@ -4,6 +4,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calorie Prediction</title>
+    <style>
+        /* General styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        h2 {
+            color: #333;
+            font-size: 1.8em;  /* Smaller font size */
+            margin-bottom: 15px; /* Decreased margin */
+        }
+
+        h3 {
+            color: #555;
+            font-size: 1.2em;  /* Smaller font size */
+            margin-top: 15px;
+        }
+
+        #predictionForm {
+            background-color: #fff;
+            padding: 15px;  /* Reduced padding */
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;  /* Reduced width */
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px; /* Reduced margin */
+        }
+
+        label {
+            margin: 5px 0;
+            font-size: 0.9em;  /* Smaller font size */
+            color: #333;
+        }
+
+        input, select, button {
+            padding: 8px;  /* Reduced padding */
+            font-size: 0.9em;  /* Smaller font size */
+            margin-bottom: 10px; /* Reduced margin for better spacing */
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .error {
+            color: #e74c3c;
+        }
+
+        .success {
+            color: #2ecc71;
+        }
+    </style>
 </head>
 <body>
     <h2>Calorie Prediction</h2>
@@ -35,7 +111,6 @@
     document.getElementById("predictionForm").addEventListener("submit", async function(event) {
         event.preventDefault();
 
-        // Get values from input fields
         const data = {
             features: [
                 parseFloat(document.getElementById("age").value),
@@ -47,7 +122,7 @@
             base_model_predictions: [150, 160, 155, 162, 158, 159]  // Add 6 dummy values
         };
 
-        console.log("Sending data:", data);  // Debugging: Log data before sending
+        console.log("Sending data:", data);
 
         try {
             let response = await fetch("/predict", {
@@ -60,15 +135,20 @@
 
             if (response.ok) {
                 document.getElementById("result").innerText = `Calories Burned: ${result.calories_burned}`;
+                document.getElementById("result").classList.add('success');
+                document.getElementById("result").classList.remove('error');
             } else {
                 document.getElementById("result").innerText = `Error: ${result.error || "Something went wrong"}`;
+                document.getElementById("result").classList.add('error');
+                document.getElementById("result").classList.remove('success');
             }
 
         } catch (error) {
             document.getElementById("result").innerText = "Server Error: Failed to fetch response";
+            document.getElementById("result").classList.add('error');
+            document.getElementById("result").classList.remove('success');
         }
     });
-</script>
-
+    </script>
 </body>
 </html>

@@ -1,43 +1,46 @@
 import joblib
 import numpy as np
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
-# Load the meta-model (Linear Regression trained on base models' predictions)
+# Load the trained model
 meta_model = joblib.load("Best_Ensemble_Model.pkl")
 
-print(f"Meta-model type: {type(meta_model)}")
-
+@app.route('/')
+def home():
+    return render_template("index.html")
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Parse the JSON request data
         data = request.get_json()
+        print("Received Data:", data)  # Debugging: Print received JSON data
 
-        # Check if necessary fields are provided
+        # Validate input
         if "features" not in data or "base_model_predictions" not in data:
-            return jsonify({"error": "Missing 'features' or 'base_model_predictions' in the input data"}), 400
+            raise ValueError("Invalid input: Missing required fields")
 
-        # Prepare the features and base model predictions
         features = np.array(data["features"]).reshape(1, -1)
-        model_predictions = np.array([data["base_model_predictions"]])
+        base_model_predictions = np.array(data["base_model_predictions"]).reshape(1, -1)
 
-        # Ensure that the number of predictions matches what the model expects
-        if model_predictions.shape[1] != 11:  # Based on your model's input size (e.g., 11 features)
-            return jsonify({"error": "Expected 11 base model predictions, but got a different number."}), 400
+        # Combine user features + base model predictions
+        full_features = np.concatenate((features, base_model_predictions), axis=1)
 
-        # Get the final prediction using the meta-model
-        final_prediction = meta_model.predict(model_predictions)
+        # Ensure no missing values
+        if np.isnan(full_features).any():
+            raise ValueError("Invalid input: Contains NaN or missing values")
 
-        # Return the prediction as a JSON response
+        # Get final prediction
+        final_prediction = meta_model.predict(full_features)
+
         return jsonify({"calories_burned": final_prediction.tolist()})
 
     except Exception as e:
-        # Handle unexpected errors
-        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
-
+        print(f"Error: {e}")
+        return jsonify({"error": str(e)}), 400  # Return error with HTTP 400
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
